@@ -39,6 +39,6 @@ SELECT
     eventname,
     eventsource,
     requestparameters
-FROM default.cloudtrail_logs_aws_cloudtrail_logs_330462944661_fd8135ed
+FROM default.your_table_name
 WHERE eventname = 'AssumeRoleWithSAML'
   AND CAST(from_iso8601_timestamp(eventtime) AS TIMESTAMP) >= current_date - interval '60' day;
