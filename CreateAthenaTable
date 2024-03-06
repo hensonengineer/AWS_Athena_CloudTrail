@@ -1,1 +1,44 @@
-#
+# set up table on default DB
+
+aws athena start-query-execution \
+    --query-string "CREATE EXTERNAL TABLE IF NOT EXISTS default.your_table_name (
+      `eventVersion` string,
+      `userIdentity` struct<type:string, principalId:string, arn:string, accountId:string, invokedBy:string, accessKeyId:string, userName:string, sessionContext:struct<attributes:struct<mfaAuthenticated:string, creationDate:string>, sessionIssuer:struct<type:string, principalId:string, arn:string, accountId:string, userName:string>>>,
+      `eventTime` string,
+      `eventSource` string,
+      `eventName` string,
+      `awsRegion` string,
+      `sourceIPAddress` string,
+      `userAgent` string,
+      `errorCode` string,
+      `errorMessage` string,
+      `requestParameters` string,
+      `responseElements` string,
+      `additionalEventData` string,
+      `requestID` string,
+      `eventID` string,
+      `eventType` string,
+      `apiVersion` string,
+      `readOnly` string,
+      `recipientAccountId` string,
+      `serviceEventDetails` string,
+      `sharedEventID` string,
+      `vpcEndpointId` string
+    ) 
+    ROW FORMAT SERDE 'com.amazonaws.glue.serde.GrokSerDe' 
+    WITH SERDEPROPERTIES ('serialization.format' = '1') 
+    LOCATION 's3://your-cloudtrail-bucket/AWSLogs/your-account-id/' 
+    TABLEPROPERTIES ('classification' = 'cloudtrail');" \
+    --result-configuration OutputLocation=s3://your-output-bucket/path/
+
+
+
+# Query to understand who logged in with an IDP and what Role was Assumed
+SELECT
+    eventtime,
+    eventname,
+    eventsource,
+    requestparameters
+FROM default.cloudtrail_logs_aws_cloudtrail_logs_330462944661_fd8135ed
+WHERE eventname = 'AssumeRoleWithSAML'
+  AND CAST(from_iso8601_timestamp(eventtime) AS TIMESTAMP) >= current_date - interval '60' day;
